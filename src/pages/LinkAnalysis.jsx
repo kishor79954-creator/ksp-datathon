@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { getNetworkData, getComplexNetworkData } from '../data/mockService';
+import { getNetworkData, getComplexNetworkData, getHubballiData, getFinancialData } from '../data/mockService';
 import { Network, ZoomIn, ZoomOut, Maximize, FileUp, FolderOpen, ChevronRight, Loader2, BrainCircuit } from 'lucide-react';
 import './LinkAnalysis.css';
 
@@ -209,8 +209,27 @@ const LinkAnalysis = () => {
                   className={`case-card ${activeCaseId === c.id ? 'active' : ''}`}
                   onClick={() => {
                     setActiveCaseId(c.id);
-                    // Just a visual switch for the demo
-                    if (c.id === 'c1') setData(getNetworkData());
+                    if (c.id === 'c1') {
+                      setData(getNetworkData());
+                      setAiInsights([
+                        { type: 'normal', text: 'Strong correlation detected between Ravi K. and Vehicle Theft Ring based on recent geolocation overlap.' },
+                        { type: 'warning', text: 'Unknown suspect node connected to 3 open FIRs in Mysuru.' }
+                      ]);
+                    } else if (c.id === 'c2') {
+                      setData(getHubballiData());
+                      setAiInsights([
+                        { type: 'warning', text: 'Multiple suspect drivers crossed Border Checkpoint simultaneously.' },
+                        { type: 'normal', text: 'Logistics Co. identified as main front for smuggling operations.' }
+                      ]);
+                    } else if (c.id === 'c3') {
+                      setData(getFinancialData());
+                      setAiInsights([
+                        { type: 'warning', text: 'Crypto Wallet X and Y linked to Mastermind.' },
+                        { type: 'normal', text: 'Fake Call Center scammed Victim List A and B.' }
+                      ]);
+                    } else {
+                      setData(getComplexNetworkData());
+                    }
                     if (fgRef.current) setTimeout(() => fgRef.current.zoomToFit(400), 100);
                   }}
                 >

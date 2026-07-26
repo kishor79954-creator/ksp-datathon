@@ -181,3 +181,47 @@ export const getComplexNetworkData = () => {
 
   return { nodes, links };
 };
+
+// 9. Hubballi Smuggling Ring Data (c2)
+export const getHubballiData = () => {
+  const nodes = [
+    { id: 'H1', name: 'Sandeep R.', type: 'Suspect', group: 1, val: 25 },
+    { id: 'H2', name: 'Logistics Co.', type: 'Organization', group: 4, val: 30 },
+    { id: 'H3', name: 'Border Checkpoint', type: 'Location', group: 3, val: 15 },
+    { id: 'H4', name: 'Warehouse 4', type: 'Location', group: 3, val: 20 },
+    { id: 'H5', name: 'Driver_001', type: 'Suspect', group: 1, val: 10 },
+    { id: 'H6', name: 'Driver_002', type: 'Suspect', group: 1, val: 10 }
+  ];
+  const links = [
+    { source: 'H1', target: 'H2', type: 'Owner' },
+    { source: 'H2', target: 'H4', type: 'Operates' },
+    { source: 'H5', target: 'H2', type: 'Employed' },
+    { source: 'H6', target: 'H2', type: 'Employed' },
+    { source: 'H5', target: 'H3', type: 'Crossed' },
+    { source: 'H6', target: 'H3', type: 'Crossed' },
+    { source: 'H1', target: 'H3', type: 'Bribed Official' }
+  ];
+  return { nodes, links };
+};
+
+// 10. Financial Fraud Nexus Data (c3)
+export const getFinancialData = () => {
+  const nodes = [
+    { id: 'F1', name: 'Fake Call Center', type: 'Organization', group: 4, val: 35 },
+    { id: 'F2', name: 'Victim List A', type: 'Victim', group: 2, val: 20 },
+    { id: 'F3', name: 'Victim List B', type: 'Victim', group: 2, val: 20 },
+    { id: 'F4', name: 'Crypto Wallet X', type: 'Location', group: 3, val: 30 },
+    { id: 'F5', name: 'Crypto Wallet Y', type: 'Location', group: 3, val: 30 },
+    { id: 'F6', name: 'Mastermind', type: 'Suspect', group: 1, val: 40 }
+  ];
+  const links = [
+    { source: 'F6', target: 'F1', type: 'Funds' },
+    { source: 'F1', target: 'F2', type: 'Scammed' },
+    { source: 'F1', target: 'F3', type: 'Scammed' },
+    { source: 'F2', target: 'F4', type: 'Transfer' },
+    { source: 'F3', target: 'F5', type: 'Transfer' },
+    { source: 'F4', target: 'F6', type: 'Laundered' },
+    { source: 'F5', target: 'F6', type: 'Laundered' }
+  ];
+  return { nodes, links };
+};
