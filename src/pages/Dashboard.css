@@ -1,0 +1,100 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.kpi-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+.kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.trend-up { color: var(--accent-red); }
+.trend-down { color: var(--accent-green); }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.chart-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card h3 {
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.chart-wrapper {
+  flex: 1;
+  min-height: 250px;
+}
+
+/* Custom Tooltip styling for Recharts */
+.custom-tooltip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-md);
+}
+
+.custom-tooltip .label {
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.custom-tooltip .value {
+  color: var(--text-primary);
+  font-weight: 600;
+}

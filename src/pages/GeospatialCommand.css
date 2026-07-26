@@ -1,0 +1,58 @@
+.geo-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: calc(100vh - 60px);
+}
+
+.map-header {
+  margin-bottom: 8px;
+}
+
+.map-wrapper {
+  flex: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+/* Override Leaflet styles for dark theme */
+.leaflet-container {
+  background: var(--bg-main) !important;
+  font-family: 'Inter', sans-serif;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--shadow-md);
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-panel);
+}
+
+.popup-content h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.popup-content p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.popup-content strong {
+  color: var(--text-primary);
+}
+
+.text-red { color: var(--accent-red); }
+.text-amber { color: var(--accent-amber); }
+.text-cyan { color: var(--accent-cyan); }
