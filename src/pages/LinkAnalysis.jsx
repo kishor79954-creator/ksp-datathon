@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { getNetworkData, getComplexNetworkData, getHubballiData, getFinancialData } from '../data/mockService';
 import { Network, ZoomIn, ZoomOut, Maximize, FileUp, FolderOpen, ChevronRight, Loader2, BrainCircuit } from 'lucide-react';
@@ -10,6 +10,15 @@ const INITIAL_CASES = [
   { id: 'c3', title: 'Financial Fraud Nexus', date: '02 Jun 2026', type: 'White Collar', status: 'Closed' }
 ];
 
+// Map node types to legend colors
+const NODE_COLORS = {
+  Suspect: '#3b82f6', // Blue
+  Organization: '#ef4444', // Red
+  Location: '#f59e0b', // Amber/Yellow
+  Victim: '#10b981', // Green
+  Default: '#94a3b8'
+};
+
 const LinkAnalysis = () => {
   const fgRef = useRef();
   const fileInputRef = useRef(null);
@@ -19,13 +28,20 @@ const LinkAnalysis = () => {
   const [cases, setCases] = useState(INITIAL_CASES);
   const [activeCaseId, setActiveCaseId] = useState('c1');
   
-  // Simulation States
-  const [importStatus, setImportStatus] = useState('idle'); // idle, analyzing, extracting, building, success
+  const [importStatus, setImportStatus] = useState('idle'); 
   const [aiInsights, setAiInsights] = useState([
     { type: 'normal', text: 'Strong correlation detected between Ravi K. and Vehicle Theft Ring based on recent geolocation overlap.' },
     { type: 'warning', text: 'Unknown suspect node connected to 3 open FIRs in Mysuru.' }
   ]);
   
+  // Custom force configuration for clean, widely spaced graph
+  useEffect(() => {
+    if (fgRef.current) {
+      fgRef.current.d3Force('charge').strength(-400);
+      fgRef.current.d3Force('link').distance(60);
+    }
+  }, [data]);
+
   useEffect(() => {
     setData(getNetworkData());
     
@@ -46,7 +62,6 @@ const LinkAnalysis = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Start Simulation Sequence
     setImportStatus('analyzing');
     
     setTimeout(() => {
@@ -58,11 +73,10 @@ const LinkAnalysis = () => {
     }, 3000);
 
     setTimeout(() => {
-      // Complete Simulation
       const newCaseId = `c_${Date.now()}`;
       const newCase = {
         id: newCaseId,
-        title: file.name.replace(/\.[^/.]+$/, ""), // File name without extension
+        title: file.name.replace(/\.[^/.]+$/, ""), 
         date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
         type: 'AI Imported Analysis',
         status: 'Active'
@@ -70,7 +84,7 @@ const LinkAnalysis = () => {
 
       setCases([newCase, ...cases]);
       setActiveCaseId(newCaseId);
-      setData(getComplexNetworkData()); // Load massive graph
+      setData(getComplexNetworkData()); 
       
       setAiInsights([
         { type: 'warning', text: `AI extracted ${getComplexNetworkData().nodes.length} entities and ${getComplexNetworkData().links.length} hidden connections from ${file.name}.` },
@@ -103,7 +117,6 @@ const LinkAnalysis = () => {
       </div>
 
       <div className="network-content">
-        {/* LEFT: The Graph */}
         <div className="network-wrapper glass-panel">
           
           {importStatus !== 'idle' && importStatus !== 'success' && (
@@ -128,9 +141,10 @@ const LinkAnalysis = () => {
 
           <div className="graph-legend">
             <h4>Node Types</h4>
-            <div className="legend-item"><span className="node-color person"></span> Suspect / Person</div>
-            <div className="legend-item"><span className="node-color case"></span> Criminal Org</div>
-            <div className="legend-item"><span className="node-color location"></span> Location</div>
+            <div className="legend-item"><span className="node-color" style={{backgroundColor: NODE_COLORS.Suspect}}></span> Suspect / Person</div>
+            <div className="legend-item"><span className="node-color" style={{backgroundColor: NODE_COLORS.Organization}}></span> Criminal Org</div>
+            <div className="legend-item"><span className="node-color" style={{backgroundColor: NODE_COLORS.Location}}></span> Location</div>
+            <div className="legend-item"><span className="node-color" style={{backgroundColor: NODE_COLORS.Victim}}></span> Target / Victim</div>
           </div>
           
           <ForceGraph2D
@@ -138,41 +152,90 @@ const LinkAnalysis = () => {
             width={windowWidth}
             height={700}
             graphData={data}
-            nodeAutoColorBy="group"
-            nodeRelSize={6}
-            linkColor={() => 'rgba(255, 255, 255, 0.15)'}
+            nodeRelSize={4}
+            linkColor={() => 'rgba(255, 255, 255, 0.25)'}
             linkWidth={1.5}
-            linkDirectionalParticles={2}
-            linkDirectionalParticleSpeed={0.005}
-            d3AlphaDecay={0.01}
-            d3VelocityDecay={0.08}
+            linkDirectionalArrowLength={3.5}
+            linkDirectionalArrowRelPos={1}
+            d3AlphaDecay={0.02}
+            d3VelocityDecay={0.1}
+            
+            // Draw link labels (relationship types)
+            linkCanvasObjectMode={() => 'after'}
+            linkCanvasObject={(link, ctx, globalScale) => {
+              if (globalScale < 1.2) return; // Only show text when zoomed in
+              
+              const MAX_FONT_SIZE = 4;
+              const LABEL_NODE_MARGIN = fgRef.current.zoom() * 1.5;
+              
+              const start = link.source;
+              const end = link.target;
+              if (typeof start !== 'object' || typeof end !== 'object') return; // ignore if not resolved
+
+              const textPos = Object.assign(...['x', 'y'].map(c => ({
+                [c]: start[c] + (end[c] - start[c]) / 2 
+              })));
+
+              const relLink = { x: end.x - start.x, y: end.y - start.y };
+              let textAngle = Math.atan2(relLink.y, relLink.x);
+              
+              if (textAngle > Math.PI / 2) textAngle = -(Math.PI - textAngle);
+              if (textAngle < -Math.PI / 2) textAngle = -(-Math.PI - textAngle);
+
+              const fontSize = 12 / globalScale;
+              ctx.font = `${Math.min(fontSize, MAX_FONT_SIZE)}px Inter`;
+              const label = link.type || '';
+              
+              ctx.save();
+              ctx.translate(textPos.x, textPos.y);
+              ctx.rotate(textAngle);
+              
+              // Text background
+              const textWidth = ctx.measureText(label).width;
+              ctx.fillStyle = 'rgba(10, 11, 16, 0.8)';
+              ctx.fillRect(-textWidth / 2 - 1, -fontSize / 2 - 1, textWidth + 2, fontSize + 2);
+              
+              // Text
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+              ctx.fillText(label, 0, 0);
+              ctx.restore();
+            }}
+
+            // Draw clean nodes
             nodeCanvasObject={(node, ctx, globalScale) => {
               const label = node.name;
-              const fontSize = Math.max(12 / globalScale, 2);
-              ctx.font = `${fontSize}px Inter`;
-              
+              const fontSize = Math.max(12 / globalScale, 2.5);
+              const nodeColor = NODE_COLORS[node.type] || NODE_COLORS.Default;
+              const nodeRadius = Math.min(Math.max((node.val || 5) / 3, 3), 10); // Clamped sizing so it never looks gross
+
               ctx.beginPath();
-              ctx.arc(node.x, node.y, node.val / 1.5, 0, 2 * Math.PI, false);
-              ctx.fillStyle = node.color;
+              ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
+              ctx.fillStyle = nodeColor;
               
-              if (node.group === 4) {
-                 ctx.shadowColor = node.color;
-                 ctx.shadowBlur = 15;
+              if (node.group === 4 || node.type === 'Organization') {
+                 ctx.shadowColor = nodeColor;
+                 ctx.shadowBlur = 10;
               }
               ctx.fill();
               ctx.shadowBlur = 0;
-
-              // Only show text if zoomed in enough, to prevent clutter on massive graphs
-              if (globalScale >= 1.5 || node.val > 15) {
+              
+              // Draw text cleanly below the node
+              if (globalScale >= 1.2 || nodeRadius > 5) {
                 const textWidth = ctx.measureText(label).width;
                 const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); 
+                
+                const textY = node.y + nodeRadius + (fontSize / 2) + 1;
+                
+                ctx.font = `${fontSize}px Inter`;
                 ctx.fillStyle = 'rgba(10, 11, 16, 0.85)';
-                ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + node.val / 1.5 + 4, bckgDimensions[0], bckgDimensions[1]);
+                ctx.fillRect(node.x - bckgDimensions[0] / 2, textY - fontSize / 2, bckgDimensions[0], bckgDimensions[1]);
                 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                ctx.fillText(label, node.x, node.y + node.val / 1.5 + 4 + fontSize / 2);
+                ctx.fillText(label, node.x, textY);
               }
             }}
           />
