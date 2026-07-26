@@ -146,3 +146,38 @@ export const getAIFairnessData = () => {
   };
 };
 
+// 8. Complex Post-Import AI Graph Data
+export const getComplexNetworkData = () => {
+  const nodes = [];
+  const links = [];
+  
+  // Core nodes
+  nodes.push({ id: 'Org1', name: 'Shell Corp Alpha', type: 'Organization', group: 4, val: 30 });
+  nodes.push({ id: 'Org2', name: 'Front Company X', type: 'Organization', group: 4, val: 25 });
+  nodes.push({ id: 'Loc1', name: 'Offshore Account', type: 'Location', group: 3, val: 20 });
+  
+  // Generate 35 suspects
+  for(let i=1; i<=35; i++) {
+    nodes.push({ id: `S${i}`, name: `Alias_${i}`, type: 'Suspect', group: 1, val: Math.random() * 10 + 5 });
+    
+    // Link to main orgs randomly
+    if (Math.random() > 0.6) links.push({ source: `S${i}`, target: 'Org1', type: 'Employee' });
+    if (Math.random() > 0.8) links.push({ source: `S${i}`, target: 'Org2', type: 'Director' });
+    
+    // Link to offshore
+    if (Math.random() > 0.9) links.push({ source: `S${i}`, target: 'Loc1', type: 'Transfer' });
+    
+    // Link to each other to create clusters
+    if (i > 1 && Math.random() > 0.7) {
+      links.push({ source: `S${i}`, target: `S${Math.floor(Math.random() * i) + 1}`, type: 'Call Record' });
+    }
+  }
+  
+  // Generate victims
+  for(let i=1; i<=15; i++) {
+    nodes.push({ id: `V${i}`, name: `Target_Account_${i}`, type: 'Victim', group: 2, val: 8 });
+    if (Math.random() > 0.5) links.push({ source: 'Org1', target: `V${i}`, type: 'Defrauded' });
+  }
+
+  return { nodes, links };
+};
