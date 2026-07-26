@@ -1,27 +1,40 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { getNetworkData } from '../data/mockService';
-import { Network, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Network, ZoomIn, ZoomOut, Maximize, FileUp, FolderOpen, ChevronRight } from 'lucide-react';
 import './LinkAnalysis.css';
+
+const MOCK_CASES = [
+  { id: 'c1', title: 'Operation Cyber Storm', date: '24 Jul 2026', type: 'Cyber Crime', status: 'Active' },
+  { id: 'c2', title: 'Hubballi Smuggling Ring', date: '18 Jul 2026', type: 'Organized Crime', status: 'Active' },
+  { id: 'c3', title: 'Financial Fraud Nexus', date: '02 Jun 2026', type: 'White Collar', status: 'Closed' }
+];
 
 const LinkAnalysis = () => {
   const fgRef = useRef();
   const [data, setData] = useState({ nodes: [], links: [] });
-  const [windowWidth, setWindowWidth] = useState(800); // Default placeholder
+  const [windowWidth, setWindowWidth] = useState(800);
+  const [activeCaseId, setActiveCaseId] = useState('c1');
+  const [isImporting, setIsImporting] = useState(false);
   
   useEffect(() => {
     setData(getNetworkData());
     
-    // Quick resize handler
     const updateSize = () => {
       const wrapper = document.querySelector('.network-wrapper');
       if (wrapper) setWindowWidth(wrapper.clientWidth);
     };
     window.addEventListener('resize', updateSize);
-    updateSize();
+    // Initial size
+    setTimeout(updateSize, 100);
     
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  const handleImport = () => {
+    setIsImporting(true);
+    setTimeout(() => setIsImporting(false), 1500); // Mock import delay
+  };
 
   return (
     <div className="network-container animate-fade-in">
@@ -38,15 +51,23 @@ const LinkAnalysis = () => {
       </div>
 
       <div className="network-content">
+        {/* LEFT: The Graph */}
         <div className="network-wrapper glass-panel">
+          <div className="graph-legend">
+            <h4>Node Types</h4>
+            <div className="legend-item"><span className="node-color person"></span> Suspect / Person</div>
+            <div className="legend-item"><span className="node-color case"></span> Criminal Org</div>
+            <div className="legend-item"><span className="node-color location"></span> Location</div>
+          </div>
+          
           <ForceGraph2D
             ref={fgRef}
             width={windowWidth}
-            height={600}
+            height={700}
             graphData={data}
             nodeAutoColorBy="group"
             nodeRelSize={6}
-            linkColor={() => 'rgba(255, 255, 255, 0.2)'}
+            linkColor={() => 'rgba(255, 255, 255, 0.15)'}
             linkWidth={1.5}
             linkDirectionalParticles={2}
             linkDirectionalParticleSpeed={0.005}
@@ -55,56 +76,72 @@ const LinkAnalysis = () => {
               const fontSize = 12 / globalScale;
               ctx.font = `${fontSize}px Inter`;
               
-              // Draw node
               ctx.beginPath();
-              ctx.arc(node.x, node.y, node.val / 2, 0, 2 * Math.PI, false);
+              ctx.arc(node.x, node.y, node.val / 1.5, 0, 2 * Math.PI, false);
               ctx.fillStyle = node.color;
-              ctx.fill();
               
-              // Add glow for main suspects/orgs
               if (node.group === 4) {
                  ctx.shadowColor = node.color;
                  ctx.shadowBlur = 15;
-                 ctx.fill();
-                 ctx.shadowBlur = 0;
               }
+              ctx.fill();
+              ctx.shadowBlur = 0;
 
-              // Draw label background
               const textWidth = ctx.measureText(label).width;
               const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2); 
-              ctx.fillStyle = 'rgba(11, 15, 25, 0.8)';
-              ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + node.val / 2 + 2, bckgDimensions[0], bckgDimensions[1]);
+              ctx.fillStyle = 'rgba(10, 11, 16, 0.85)';
+              ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y + node.val / 1.5 + 4, bckgDimensions[0], bckgDimensions[1]);
               
-              // Draw text
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-              ctx.fillText(label, node.x, node.y + node.val / 2 + 2 + fontSize / 2);
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+              ctx.fillText(label, node.x, node.y + node.val / 1.5 + 4 + fontSize / 2);
             }}
           />
         </div>
         
-        <div className="network-sidebar glass-panel">
-          <h3>Entity Relationships</h3>
-          <p className="sidebar-desc">Select a node in the graph to view detailed MO associations.</p>
+        {/* RIGHT: Case Management Sidebar */}
+        <div className="case-manager-sidebar glass-panel">
           
-          <div className="entity-legend">
-            <h4>Node Types</h4>
-            <ul>
-              <li><span className="dot" style={{background: '#3b82f6'}}></span> Suspect</li>
-              <li><span className="dot" style={{background: '#10b981'}}></span> Victim / Target</li>
-              <li><span className="dot" style={{background: '#f59e0b'}}></span> Location</li>
-              <li><span className="dot" style={{background: '#ef4444'}}></span> Criminal Org</li>
-            </ul>
+          <div className="sidebar-section">
+            <button className={`import-btn ${isImporting ? 'importing' : ''}`} onClick={handleImport}>
+              <FileUp size={20} />
+              {isImporting ? 'Importing Data...' : 'Import Case Data (.CSV/.JSON)'}
+            </button>
           </div>
-          
-          <div className="mo-insights">
-            <h4>AI Insights</h4>
-            <div className="insight-card">
-              <Network size={16} className="insight-icon" />
-              <p>Strong correlation detected between <strong>Ravi K.</strong> and <strong>Vehicle Theft Ring</strong> based on recent geolocation overlap.</p>
+
+          <div className="sidebar-section">
+            <h3 className="section-title"><FolderOpen size={18} /> Active Cases</h3>
+            <div className="case-list">
+              {MOCK_CASES.map(c => (
+                <div 
+                  key={c.id} 
+                  className={`case-card ${activeCaseId === c.id ? 'active' : ''}`}
+                  onClick={() => setActiveCaseId(c.id)}
+                >
+                  <div className="case-info">
+                    <h4>{c.title}</h4>
+                    <div className="case-meta">
+                      <span className="case-type">{c.type}</span>
+                      <span className="case-date">{c.date}</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="case-arrow" />
+                </div>
+              ))}
             </div>
           </div>
+
+          <div className="mo-insights">
+            <h4><Network size={18} /> AI Graph Insights</h4>
+            <div className="insight-card">
+              <p>Strong correlation detected between <strong>Ravi K.</strong> and <strong>Vehicle Theft Ring</strong> based on recent geolocation overlap.</p>
+            </div>
+            <div className="insight-card warning">
+              <p>Unknown suspect node connected to 3 open FIRs in <strong>Mysuru</strong>.</p>
+            </div>
+          </div>
+          
         </div>
       </div>
     </div>
